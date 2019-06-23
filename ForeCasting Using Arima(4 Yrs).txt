@@ -1,0 +1,54 @@
+##DECOMPOSITION OF TIME-SERIES " JohnDeere"
+
+library(forecast)
+
+JD <- read.csv("Tractor-Sales.csv")
+
+#STEP-1 : Plot tractor sales data as Time-Series
+t1 <- ts(JD[,2], start=c(2003,1),frequency = 12)
+#simple plotting of Time-Series Data (TREND)
+plot(t1, col="blue", main="Monthly Sales Of JD (2003-2014)", ylab="Sales", xlab="Years")
+
+#STEP-2 :Difference data to make data stationary on mean (remove Trend)
+plot(diff(t1),ylab="Differenced Tractor Sales")
+#we need to difference data to make it stationary , bcz the forecasting can't be done on the data which has different mean & different variance
+#so we used 'diff' command to get stationary mean & stationary variance
+#But here also we are getting different variance,so to get constant variance 'log of difference' will be used
+
+#STEP-3 : Use Log to get constant variance
+plot(diff(log10(t1)),ylab="Differenced Tractor Sales")
+
+#STEP-4 : 
+
+
+##Simple Moving Average
+library("TTR")
+
+t1SMA3 <- SMA(t1,n=3)
+plot(t1SMA3)
+accuracy(JD[,2],t1SMA3)
+SMAForecast1 <- forecast(t1SMA3,36)
+
+t1SMA4 <- SMA(t1,n=6)
+plot(t1SMA4)
+accuracy(JD[,2],t1SMA4)
+SMAForecast2 <- forecast(t1SMA4,36)
+
+##Exponential Smoothing
+?HoltWinters
+ES <- HoltWinters(t1, beta=TRUE, gamma=TRUE)
+ES$SSE
+plot(ES)
+
+Timeseriescomponents <- decompose(t1)
+plot(Timeseriescomponents)
+
+
+#Forecasting for 4 years Using ARIMA model
+arima <- auto.arima(t1)
+predict(arima)
+predict(arima, n.ahead = 12)
+predicted <- predict(arima, n.ahead = 36)
+predicted$pred
+plot.ts(predicted$pred)
+accuracy(arima$fitted,JD[,2])
